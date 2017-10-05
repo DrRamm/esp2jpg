@@ -67,7 +67,8 @@ dlg.center();
 /*
 var quality_list = new Array('10', '20', '30', '40', '50', '60', '70', '80', '90', '100');
 
-for(var i = 0; i < quality_list.length; i++){
+for(var i = 0; i < quality_list.length; i++)
+{
   dlg.misc_settings.quality.value.list.add('item', quality_list[i]);
 }
 
@@ -75,17 +76,17 @@ dlg.misc_settings.quality.value.edit.onChange = function() { dlg.misc_settings.q
 dlg.misc_settings.quality.value.list.onChange = function () {dlg.misc_settings.quality.value.edit.text = list.selection.text;  }
 */
 
-if ( 1 == dlg.show() ) {
+if ( 1 == dlg.show() )
+{
     var inputFolder = Folder.selectDialog("Select the Folder with the EPS-Sourcefiles.");  
-    /*var OutputFolder = Folder.selectDialog("Select the Folder in which the JPG-Targetfiles should be saved.");  */
-
-} else {
+} 
+else 
+{
   alert('EPS->JPG\nBatch Processing canceled.');
 }
 
 var makegood = function(inputFolder)
 {
-
 	if ( inputFolder != null ) 
 	{  
 		// Get all files in the current folder  
@@ -97,11 +98,8 @@ var makegood = function(inputFolder)
 			// else call the traverse folder recursively with the current folder as an argument  
 			if (files[i] instanceof File)  
 			{  
-				// Convert the file object to a string for matching purposes (match only works on String objects)  
-				var fileString = String(files[i]); 
-				
-				if (fileString.match(/.(eps)$/))  
-				{	
+				    // Makes list of all files located in that folder  
+					var eps_list = inputFolder.getFiles( "*.eps" );	
 					// Create a EPS option object [height & width are doc size]  
 					var eps_oo = new EPSOpenOptions();  
 
@@ -110,72 +108,74 @@ var makegood = function(inputFolder)
 					eps_oo.constrainProportions = true;  
 					eps_oo.resolution = (dlg.misc_settings.dpi.value.text) ? parseInt(dlg.misc_settings.dpi.value.text):72;
 
-					// open the file once unmodified for getting the file constrains
-					app.open( files[i], eps_oo );  
+					// Open each file in turn  
+					for (var i = 0; i < eps_list.length; i++) {  
 
-					var w = activeDocument.width;
-					var h = activeDocument.height;
+						// open the file once unmodified for getting the file constrains
+						app.open( eps_list[i], eps_oo );  
 
-					activeDocument.close( SaveOptions.DONOTSAVECHANGES );  
+						var w = activeDocument.width;
+						var h = activeDocument.height;
 
-					//modifiy settings for loading our scaled image
-					eps_oo.constrainProportions = eps_oo.constrainProportions;
-					eps_oo.resolution = eps_oo.resolution;
+						activeDocument.close( SaveOptions.DONOTSAVECHANGES );  
 
-					//portrait
-					if(w > h && dlg.q_picSettings.widthValue.text != "") 
-					{
-						eps_oo.width = parseInt(dlg.q_picSettings.widthValue.text);
-					//landscape
-					} 
-					else if(w < h && dlg.h_picSettings.widthValue.text != "") 
-					{
-						eps_oo.width = parseInt(dlg.h_picSettings.widthValue.text);
-					} 
-					else if(w = h && dlg.qu_picSettings.widthValue.text != "") 
-					{
-						eps_oo.width = parseInt(dlg.qu_picSettings.widthValue.text);            
+						//modifiy settings for loading our scaled image
+						eps_oo.constrainProportions = eps_oo.constrainProportions;
+						eps_oo.resolution = eps_oo.resolution;
+
+						//portrait
+						if(w > h && dlg.q_picSettings.widthValue.text != "") {
+							eps_oo.width = parseInt(dlg.q_picSettings.widthValue.text);
+						//landscape
+						} else if(w < h && dlg.h_picSettings.widthValue.text != "") {
+							eps_oo.width = parseInt(dlg.h_picSettings.widthValue.text);
+						} else if(w = h && dlg.qu_picSettings.widthValue.text != "") {
+							eps_oo.width = parseInt(dlg.qu_picSettings.widthValue.text);            
+						}
+
+						// open the file again width our choosen width
+						app.open( eps_list[i], eps_oo);  
+
+						var baseName = activeDocument.name.slice( 0,-4 );  
+
+						// put your code to 'save as' the file here  
+						var saveFile = new File ( inputFolder + "/" + baseName + ".jpg" );  
+						var quality = 60;
+
+						if(dlg.misc_settings.quality.value.edit.text != "")  {
+							quality = parseInt(dlg.misc_settings.quality.value.edit.text);
+							quality = (quality >= 100) ? 100:quality;
+							quality = (quality <= 0) ? 0:quality;
+						}
+
+						SaveForWeb(saveFile,quality); // set quality to suit  
+
+						function SaveForWeb(saveFile,jpegQuality) {  
+							var sfwOptions = new ExportOptionsSaveForWeb();   
+							sfwOptions.format = SaveDocumentType.JPEG;   
+							sfwOptions.includeProfile = false;   
+							sfwOptions.interlaced = 0;   
+							sfwOptions.optimized = true;   
+							sfwOptions.quality = jpegQuality;  
+
+							activeDocument.exportDocument(saveFile, ExportType.SAVEFORWEB, sfwOptions);  
+
+						};    
+
+						activeDocument.close( SaveOptions.DONOTSAVECHANGES );    
+
 					}
-
-					// open the file again width our choosen width
-					app.open( files[i], eps_oo);  
-
-					var baseName = activeDocument.name.slice( 0,-4 );  
-
-					// put your code to 'save as' the file here  
-					var saveFile = new File ( inputFolder + "/" + baseName + ".jpg" );  
-					var quality = 60;
-
-					if(dlg.misc_settings.quality.value.edit.text != "")  
-					{
-						quality = parseInt(dlg.misc_settings.quality.value.edit.text);
-						quality = (quality >= 100) ? 100 : quality;
-						quality = (quality <= 0) ? 0 : quality;
-					}
-
-					SaveForWeb(saveFile,quality); // set quality to suit  
-
-					function SaveForWeb(saveFile,jpegQuality) 
-					{  
-						var sfwOptions = new ExportOptionsSaveForWeb();   
-						sfwOptions.format = SaveDocumentType.JPEG;   
-						sfwOptions.includeProfile = false;   
-						sfwOptions.interlaced = 0;   
-						sfwOptions.optimized = true;   
-						sfwOptions.quality = jpegQuality;  
-
-						activeDocument.exportDocument(saveFile, ExportType.SAVEFORWEB, sfwOptions);  
-
-					};    
-
-					activeDocument.close( SaveOptions.DONOTSAVECHANGES );    
-				}
+				
 			}
 			else  
 			{
 				makegood(files[i]);  
 			} 
 		}				
+	}
+	else
+	{
+		alert('EPS->JPG\nBatch Something with folder');
 	}
 };
 	
