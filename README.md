@@ -4,9 +4,8 @@ Link that helps me (that's original stuff)
 https://coderwall.com/p/kh5ura/photoshop-eps-to-jpg-batch-processing
 
 ## Features:
-	* Grabs all EPS out of a Folder
+	* Grabs all EPS out of a Folder and subfolders
 	* Rasterizes it depending on your set dimensions and quality (Different Settings for Portrait, Landscape and Quadratic Pictures possible)
-	* Saves the EPS-Files as JPG to another Folder
 	* Only throws a popup when it 's done or failed
 	* Profit
 	
